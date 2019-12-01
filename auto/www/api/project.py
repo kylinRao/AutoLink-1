@@ -120,11 +120,12 @@ class ProjectList(Resource):
         self.parser.add_argument('project', type=str)
         self.parser.add_argument('suite', type=str)
         self.parser.add_argument('splitext', type=str)
+        self.parser.add_argument('current_path', type=str)
         self.app = current_app._get_current_object()
 
     def get(self):
         args = self.parser.parse_args()
-
+        self.app.logger.debug(args)
         if args["category"] == "root":
             return get_projects(self.app, session["username"])
         elif args["category"] == "project":
@@ -258,6 +259,9 @@ def get_project_detail(app, username, p_name):
 
 
 def get_projects(app, username):
+    # app.logger.debug(args)
+    current_path = app.config["AUTO_HOME"] + "/workspace/" + username + "/"
+    re_path = os.path.join("workspace",username)
     projects = get_project_list(app, username)
     children = []
     for p in projects:
@@ -265,9 +269,12 @@ def get_projects(app, username):
             "text": p, "iconCls": "icon-project", "state": "closed",
             "attributes": {
                 "name": p,  # "description": p["description"],
-                "category": "project",  # "boolean": p["boolean"]
+                "project_name": p,
+                "category": "project",
+                "current_path": re_path # "boolean": p["boolean"]
             },
-            "children": []
+            "children": [],
+            "current_path":re_path
         })
 
     return [{
@@ -276,78 +283,166 @@ def get_projects(app, username):
             "category": "root"
         },
         "children": children}]
+def file_case_or_suit(path,app=current_app):
+    # 判断一个路径是用例套件，还是用例文件还是普通文件
+    path_type = ''
+    if os.path.isdir(path):
+        path_type=  'suit'
+    elif '.robot' in path:
+        path_type= 'case'
+    else:
+        path_type= 'normal_file'
+    app.logger.debug("{path} is {path_type}".format(path=path,path_type=path_type))
+    return path_type
 
 
 def get_suite_by_project(app, username, args):
-    path = app.config["AUTO_HOME"] + "/workspace/" + username + "/" + args["name"]
+    app.logger.debug(args)
+    p_path = app.config["AUTO_HOME"] + "/workspace/" + username + "/" + args["name"]
+    self_path = os.path.join("workspace", username,args["name"])
 
-    suites = list_dir(path)
+    list_dirs = list_dir(p_path)
     children = []
-    if len(suites) > 1:
-        suites.sort()
-    for d in suites:
-        cases = list_dir(path + "/" + d)
-        icons = "icon-suite"
-        if len(cases) > 1:
-            icons = "icon-suite-open"
-
-        children.append({
-            "text": d, "iconCls": icons, "state": "closed",
-            "attributes": {
-                "name": d, "category": "suite"
-            },
-            "children": []
-        })
-
+    if len(list_dirs) > 1:
+        list_dirs.sort()
+    for file_or_dir_name in list_dirs:
+        fulle_path = os.path.join(p_path,file_or_dir_name)
+        if file_case_or_suit(fulle_path) == "suit":
+            icons = "icon-suite"
+            path = list_dir(fulle_path)
+            if len(path) > 1:
+                icons = "icon-suite-open"
+            children.append({
+                "text": file_or_dir_name, "iconCls": icons, "state": "closed",
+                "attributes": {
+                    "name": file_or_dir_name, "category": "suite", "current_path": self_path,"project_name":args["name"],
+                },
+                "children": [],
+                "current_path": self_path
+            })
+        elif file_case_or_suit(fulle_path) == "normal_file":
+            icons = "icon-file-default"
+            children.append({
+                "text": file_or_dir_name, "iconCls": icons, "state": "closed",
+                "attributes": {
+                    "name": text[0], "category": "case", "splitext": text[1], "current_path": self_path,"project_name":args["name"],
+                },
+                "children": [],
+                "current_path": self_path
+            })
+        else:
+            text = get_splitext(fulle_path)
+            if text[1] in ICONS:
+                icons = ICONS[text[1]]
+            # 这是一个robot结尾的用例文件
+            children.append({
+                "text": file_or_dir_name, "iconCls": icons, "state": "closed",
+                "attributes": {
+                    "name": text[0], "category": "case", "splitext": text[1], "current_path": self_path,"project_name":args["name"],
+                },
+                "children": [],
+                "current_path": self_path
+            })
     return children
 
 
 def get_case_by_suite(app, username, args):
-    path = app.config["AUTO_HOME"] + "/workspace/" + username + "/%s/%s" % (args["project"], args["name"] )
+    app.logger.debug(args)
+    current_path = os.path.join(app.config["AUTO_HOME"] ,args['current_path'],args['name'])
+    parent_path = os.path.join("workspace", username, args["project"], args["name"] )
 
-    cases = list_dir(path)
-    if len(cases) > 1:
-        cases.sort()
+    list_dirs = list_dir(current_path)
     children = []
-    for t in cases:
-        text = get_splitext(t)
-        if text[1] in ICONS:
-            icons = ICONS[text[1]]
-        else:
-            icons = "icon-file-default"
-
-        if text[1] in (".robot"):
+    if len(list_dirs) > 1:
+        list_dirs.sort()
+    for file_or_dir_name in list_dirs:
+        full_path = os.path.join(current_path, file_or_dir_name)
+        if file_case_or_suit(full_path) == "suit":
+            icons = "icon-suite"
+            path = list_dir(full_path)
+            if len(path) > 1:
+                icons = "icon-suite-open"
             children.append({
-                "text": t, "iconCls": icons, "state": "closed",
+                "text": file_or_dir_name, "iconCls": icons, "state": "closed",
                 "attributes": {
-                    "name": text[0], "category": "case", "splitext": text[1]
+                    "name": file_or_dir_name, "category": "suite", "current_path": parent_path,'project_name':args['project'],
                 },
-                "children": []
+                "children": [],
+                "current_path": parent_path
+            })
+        elif file_case_or_suit(full_path) == "normal_file":
+            icons = "icon-file-default"
+            text = get_splitext(file_or_dir_name)
+            if text[1] in ICONS:
+                icons = ICONS[text[1]]
+            children.append({
+                "text": file_or_dir_name, "iconCls": icons, "state": "closed",
+                "attributes": {
+                    "name": file_or_dir_name, "category": "case", "splitext": text[1], "current_path": parent_path,'project_name':args['project'],
+                },
+                "children": [],
+                "current_path": parent_path
             })
         else:
+            text = get_splitext(file_or_dir_name)
+            if text[1] in ICONS:
+                icons = ICONS[text[1]]
+            # 这是一个robot结尾的用例文件
             children.append({
-                "text": t, "iconCls": icons, "state": "open",
+                "text": file_or_dir_name, "iconCls": icons, "state": "closed",
                 "attributes": {
-                    "name": text[0], "category": "case", "splitext": text[1]
-                }
+                    "name": text[0], "category": "case", "splitext": text[1], "current_path": parent_path,'project_name':args['project'],
+                },
+                "children": [],
+                "current_path": parent_path
             })
+    return children
+    # cases = list_dir(path)
+    # if len(cases) > 1:
+    #     cases.sort()
+    # children = []
+    # for t in cases:
+    #     text = get_splitext(t)
+    #     if text[1] in ICONS:
+    #         icons = ICONS[text[1]]
+    #     else:
+    #         icons = "icon-file-default"
+    #
+    #     if text[1] in (".robot"):
+    #         children.append({
+    #             "text": t, "iconCls": icons, "state": "closed",
+    #             "attributes": {
+    #                 "name": text[0], "category": "case", "splitext": text[1],"current_path": re_path
+    #             },
+    #             "children": [],
+    #             "current_path": re_path
+    #         })
+    #     else:
+    #         children.append({
+    #             "text": t, "iconCls": icons, "state": "open",
+    #             "attributes": {
+    #                 "name": text[0], "category": "case", "splitext": text[1],"current_path": re_path
+    #             }
+    #         })
 
     return children
 
 
 def get_step_by_case(app, username, args):
-    print(args)
-    path = app.config["AUTO_HOME"] + "/workspace/" + username + "/%s/%s/%s%s" % (args["project"], args["suite"], args["name"], args["splitext"])
 
+    app.logger.info(args)
+    case_full_path =os.path.join(app.config["AUTO_HOME"] ,args['current_path'],args['name']+args["splitext"])
+    case_relative_path_to_app_home = os.path.join(args['current_path'],args['name']+args["splitext"])
+    re_path = os.path.join("workspace", username, args["project"], args["suite"], args["name"], args["splitext"])
     data = []
     if args["splitext"] == ".robot":
-        data = get_case_data(path)
+        data = get_case_data(case_full_path,case_relative_path_to_app_home,args=args)
 
     return data
 
 
-def get_case_data(path):
-    suite = TestSuiteBuilder().build(path)
+def get_case_data(full_path,relative_path,args):
+    suite = TestSuiteBuilder().build(full_path)
     children = []
     if suite:
         # add library
@@ -355,7 +450,7 @@ def get_case_data(path):
             children.append({
                 "text": i.name, "iconCls": "icon-library", "state": "open",
                 "attributes": {
-                    "name": i.name, "category": "library"
+                    "name": i.name, "category": "library","case_file_name":os.path.basename(full_path),"current_path":os.path.dirname(relative_path),'project_name':args['project'],
                 }
             })
 
@@ -363,7 +458,7 @@ def get_case_data(path):
             children.append({
                 "text": v.name, "iconCls": "icon-variable", "state": "open",
                 "attributes": {
-                    "name": v.name, "category": "variable"
+                    "name": v.name, "category": "variable","case_file_name":os.path.basename(full_path),"current_path":os.path.dirname(relative_path),'project_name':args['project'],
                 }
             })
 
@@ -373,14 +468,14 @@ def get_case_data(path):
                 keys.append({
                     "text": k.name, "iconCls": "icon-keyword", "state": "open",
                     "attributes": {
-                        "name": k.name, "category": "keyword"
+                        "name": k.name, "category": "keyword","case_file_name":os.path.basename(full_path),"current_path":os.path.dirname(relative_path),'project_name':args['project'],
                     }
                 })
 
             children.append({
                 "text": t.name, "iconCls": "icon-step", "state": "closed",
                 "attributes": {
-                    "name": t.name, "category": "step"
+                    "name": t.name, "category": "step","case_file_name":os.path.basename(full_path),"current_path":os.path.dirname(relative_path),'project_name':args['project'],
                 },
                 "children": keys
             })
@@ -389,7 +484,7 @@ def get_case_data(path):
             children.append({
                 "text": v.name, "iconCls": "icon-user-keyword", "state": "open",
                 "attributes": {
-                    "name": v.name, "category": "user_keyword"
+                    "name": v.name, "category": "user_keyword",'project_name':args['project'],
                 }
             })
 

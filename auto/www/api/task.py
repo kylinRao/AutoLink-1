@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import robot
 
 __author__ = "苦叶子"
 
@@ -22,7 +23,7 @@ from dateutil import tz
 from robot.api import ExecutionResult
 
 from utils.file import exists_path, read_file, remove_dir
-from utils.run import robot_run, is_run, remove_robot, stop_robot, robot_job
+from utils.run import robot_run, is_run, remove_robot, stop_robot, robot_job, robot_run_cli
 from ..app import scheduler
 
 
@@ -34,6 +35,9 @@ class Task(Resource):
         self.parser.add_argument('project', type=str)
         self.parser.add_argument('suite', type=str)
         self.parser.add_argument('case', type=str)
+        self.parser.add_argument('step', type=str)
+        self.parser.add_argument('current_path', type=str)
+        self.parser.add_argument('case_file_name', type=str)
         self.parser.add_argument('task_no', type=str)
         self.app = current_app._get_current_object()
 
@@ -44,39 +48,53 @@ class Task(Resource):
             project = self.app.config["AUTO_HOME"] + "/workspace/%s/%s" % (session['username'], args["project"])
             output = self.app.config["AUTO_HOME"] + "/jobs/%s/%s" % (session['username'], args["project"])
             if category == "project":
-                if not is_run(self.app, args["project"]):
-                    p = multiprocessing.Process(target=robot_run, args=(session["username"], args["project"], project, output))
-                    p.start()
-                    self.app.config["AUTO_ROBOT"].append({"name": args["project"], "process": p})
-                else:
-                    return {"status": "fail", "msg": "请等待上一个任务完成"}
+                self.app.logger.debug(project)
+                # if not is_run(self.app, args["project"]):
+                p = multiprocessing.Process(target=robot_run, args=(session["username"], args["project"], project, output))
+                p.start()
+                self.app.config["AUTO_ROBOT"].append({"name": args["project"], "process": p})
+                # else:
+                #     return {"status": "fail", "msg": "请等待上一个任务完成"}
             elif category == "suite":
                 case_path = project + "/%s" % args["suite"]
-                if not is_run(self.app, args["project"]):
-                    p = multiprocessing.Process(target=robot_run, args=(session["username"], args["project"], case_path, output))
-                    p.start()
-                    self.app.config["AUTO_ROBOT"].append({"name": args["project"], "process": p})
-                else:
-                    return {"status": "fail", "msg": "请等待上一个任务完成"}
+                # if not is_run(self.app, args["project"]):
+                p = multiprocessing.Process(target=robot_run, args=(session["username"], args["project"], case_path, output))
+                p.start()
+                self.app.config["AUTO_ROBOT"].append({"name": args["project"], "process": p})
+                # else:
+                #     return {"status": "fail", "msg": "请等待上一个任务完成"}
             elif category == "case":
-                case_path = project + "/%s/%s" % (args["suite"], args["case"])
-                if not is_run(self.app, args["project"]):
-                    p = multiprocessing.Process(target=robot_run,
-                                                args=(session["username"], args["project"], case_path, output))
-                    p.start()
-                    self.app.config["AUTO_ROBOT"].append(
-                        {"name": "%s" % args["project"], "process": p})
-                else:
-                    return {"status": "fail", "msg": "请等待上一个任务完成"}
 
-            return {"status": "success", "msg": "已启动运行"}
+                case_path = project + "/%s/%s" % (args["suite"], args["case"])
+                self.app.logger.debug(case_path)
+                # if not is_run(self.app, args["project"]):
+                p = multiprocessing.Process(target=robot_run,
+                                            args=(session["username"], args["project"], case_path, output))
+                p.start()
+                self.app.config["AUTO_ROBOT"].append(
+                    {"name": "%s" % args["project"], "process": p})
+                    # 去掉任务是否正在执行的判断
+                # else:
+                #     return {"status": "fail", "msg": "请等待上一个任务完成"}
+            elif category == "step":
+                self.app.logger.debug(args)
+                step_path = os.path.join(self.app.config["AUTO_HOME"] ,args["current_path"], args["case_file_name"],args['step'])
+                self.app.logger.debug("当前执行的是case文件里面的一个小用例")
+                self.app.logger.debug(step_path)
+                self.app.logger.debug(project)
+
+                # self.app.logger.debug(session["username"], args["project"],args['step'], os.path.join(self.app.config["AUTO_HOME"],args["current_path"],args["case_file_name"]), output)
+                p = multiprocessing.Process(target=robot_run_cli,
+                                            args=(session["username"], args["project"],args['step'], os.path.join(self.app.config["AUTO_HOME"],args["current_path"],args["case_file_name"]), output))
+                p.start()
+                self.app.config["AUTO_ROBOT"].append(
+                    {"name": "%s" % args["project"], "process": p})
+            return {"status": "success", "msg": "已启动运行,{content}".format(content="<a href=\"#\" onclick=\"parent.addTab('HTTP接口测试项目_demo', '/task_list/HTTP接口测试项目_demo', 'icon-task');\">查看</a>")}
         elif args["method"] == "stop":
             stop_robot(self.app, args["project"])
-
             return {"status": "success", "msg": "已停止运行"}
         elif args["method"] == "delete":
             delete_task_record(self.app, args["project"], args["task_no"])
-
             return {"status": "success", "msg": "已经删除记录"}
 
 

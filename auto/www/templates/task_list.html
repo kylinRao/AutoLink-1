@@ -22,6 +22,7 @@
                 border-bottom:1px dotted transparent;
             }
         </style>
+        <meta http-equiv="Refresh" content="30";/>
     </head>
     <body class="easyui-layout" style="padding:10">
 
@@ -73,11 +74,15 @@
             $(document).ready(function(){
                $('#task_list').datagrid('getPanel').removeClass('lines-both lines-no lines-right lines-bottom').addClass('lines-no');
             });
+            function f() {
+                $("#task_list").datagrid('reload');
+            }
             var toolbar = [
                 {
                     text:'刷新',
                     iconCls:'icon-refresh',
                     handler:function(){
+                        console.log("定时任务刷新中")
                         $("#task_list").datagrid('reload');
                     }
 			    }, '-',
@@ -138,6 +143,7 @@
                     }
 			    }
 			 ];
+            setTimeout('f()',1000);
         </SCRIPT>
     </body>
 </html>

@@ -18,8 +18,12 @@ Resource   ../001_资源集/元素对象.txt
     Close All Browsers    
 
 搜索3
-    Open Browser    ${HOME}    ${BROWSER}
+    Open Browser    ${HOME}    ${BROWSER}Get Appium Timeout
+
+
     Input Text    id=${kw_id}    ${SEARCH_WORD}
     Sleep	5s
     Close All Browsers
+    
+
     

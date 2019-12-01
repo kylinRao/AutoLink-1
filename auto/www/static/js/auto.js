@@ -117,7 +117,17 @@ function do_run(){
             var project = $('#project_tree').tree('getParent', suite.target);
             data["project"] = project.attributes["name"];
             data["suite"] = suite.attributes["name"];
+            data["current_path"] = suite.attributes["current_path"];
             data["case"] = node.attributes["name"] + node.attributes['splitext'];
+        }
+        else if(category == "step"){
+            var suite = $('#project_tree').tree('getParent', node.target);
+            var project = $('#project_tree').tree('getParent', suite.target);
+            data["project"] = project.attributes["project_name"];
+            data["suite"] = suite.attributes["name"];
+            data["current_path"] = node.attributes["current_path"] ;
+            data["case_file_name"] = node.attributes["case_file_name"] ;
+            data["step"] = node.attributes["name"] ;
         }
         do_ajax('post',
             '/api/v1/task/',
@@ -233,10 +243,13 @@ function expand(){
 
 
 function onBeforeExpand(node){
+
+    //节点展开前触发，返回 false 则取消展开动作。
     if(node){
         var param = $("#project_tree").tree("options").queryParams;
         param.category = node.attributes.category;
         param.name = node.attributes.name;
+        param.current_path = node.attributes.current_path;
         if(node.attributes.category == "suite"){
             var parent = $("#project_tree").tree('getParent', node.target);
             param.project = parent.attributes.name;
@@ -246,11 +259,15 @@ function onBeforeExpand(node){
         {
             var suite = $("#project_tree").tree('getParent', node.target);
             param.suite = suite.attributes.name;
+            param.current_path = node.attributes.current_path;
             var project = $("#project_tree").tree('getParent', suite.target);
             param.project = project.attributes.name;
             param.splitext = node.attributes.splitext;
         }
     }
+    console.log("onBeforeExpand");
+    console.log(param);
+
 }
 
 
@@ -283,6 +300,7 @@ function refresh_project_node(data){
         var param = $("#project_tree").tree("options").queryParams;
         param.category = "project";
         param.name = node.attributes.name;
+        param.name = node.attributes.current_path;
         $('#project_tree').tree('reload', node.target);
     }
     show_msg('提示信息', data.msg);

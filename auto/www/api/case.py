@@ -34,7 +34,9 @@ class Case(Resource):
         self.app = current_app._get_current_object()
 
     def get(self):
+
         args = self.parser.parse_args()
+        self.app.logger.debug(args)
         result = {"status": "success", "msg": "读取文件成功"}
 
         ext = get_splitext(args["path"])

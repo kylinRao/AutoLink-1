@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import staticVar
 
 __author__ = "苦叶子"
 
@@ -13,8 +14,10 @@ import os
 import sys
 
 from flask_script import Manager
+from flask import g
 
-from auto.www.app import create_app, load_all_task
+from auto.www.app import  load_all_task
+from auto.www.init_app import create_app
 from auto.settings import HEADER
 from utils.help import check_version
 
@@ -29,9 +32,13 @@ app = create_app('default')
 manager = Manager(app)
 
 
+
+
+
+
 if __name__ == '__main__':
 
-    check_version()
+    # check_version()
 
     load_all_task(app)
 

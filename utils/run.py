@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+import robot
+from flask_script import Manager
+from flask import current_app
+
+from auto.configuration import Config
+from auto.www.init_app import create_app, get_app
 
 __author__ = "苦叶子"
 
@@ -22,12 +28,13 @@ from email.mime.text import MIMEText
 from email.header import Header
 import json
 
-from robot.api import TestSuiteBuilder, ResultWriter, ExecutionResult
+from robot.api import TestSuiteBuilder, ResultWriter, ExecutionResult,TestSuite
 
 from utils.file import exists_path, make_nod, write_file, read_file, mk_dirs
 
 
 def robot_job(app, name, username):
+
     with app.app_context():
         project = app.config["AUTO_HOME"] + "/workspace/%s/%s" % (username, name)
         output = app.config["AUTO_HOME"] + "/jobs/%s/%s" % (username, name)
@@ -41,6 +48,7 @@ def robot_job(app, name, username):
 
 
 def robot_run(username, name, project, output):
+
     if not exists_path(output):
         mk_dirs(output)
 
@@ -66,7 +74,24 @@ def robot_run(username, name, project, output):
     ResultWriter(detail_result).write_results(report=out + '/report.html', log=out + '/log.html')
 
     send_robot_report(username, name, index, detail_result, out)
+def robot_run_cli(username, name,test_case_name, case_file_path, output):
+    if not exists_path(output):
+        mk_dirs(output)
+    (out, index) = reset_next_build_numb(output)
 
+
+    robot.run_cli(['--test',test_case_name,'--outputdir',out,case_file_path])
+
+
+    # detail_result = ExecutionResult(out + "/output.xml")
+
+    # detail_result.save(out + "/output_new.xml")
+    # reset_last_status(detail_result, output, index)
+
+    # Report and xUnit files can be generated based on the result object.
+    # ResultWriter(detail_result).write_results(report=out + '/report.html', log=out + '/log.html')
+
+    send_robot_report(username, name, index, out + '/report.html', out)
 
 def reset_next_build_numb(output):
     next_build_number = output + "/nextBuildNumber"
@@ -141,38 +166,43 @@ def is_run(app, name):
 
 
 def send_robot_report(username, name, task_no, result, output):
-    app = current_app._get_current_object()
-    build_msg = "<font color='green'>Success</font>"
-    if result.statistics.total.critical.failed != 0:
-        build_msg = "<font color='red'>Failure</font>"
+    app = get_app()
+    with app.app_context():
+        print(current_app.name)
 
-    report_url = url_for("routes.q_view_report",
-                         _external=True,
-                         username=username,
-                         project=name,
-                         task=task_no)
-    msg = MIMEText("""Hello, %s<hr>
-                项目名称：%s<hr>
-                构建编号: %s<hr>
-                构建状态: %s<hr>
-                持续时间: %s毫秒<hr>
-                详细报告: <a href='%s'>%s</a><hr>
-                构建日志: <br>%s<hr><br><br>
-                (本邮件是程序自动下发的，请勿回复！)""" %
-                   (username,
-                    result.statistics.suite.stat.name,
-                    task_no,
-                    build_msg,
-                    result.suite.elapsedtime,
-                    report_url, report_url,
-                    codecs.open(output + "/debug.txt", "r", "utf-8").read().replace("\n", "<br>")
-                    ),
-                   "html", "utf-8")
 
-    msg["Subject"] = Header("AutoLink通知消息", "utf-8")
+        build_msg = "<font color='green'>Success</font>"
+        if result.statistics.total.critical.failed != 0:
+            build_msg = "<font color='red'>Failure</font>"
 
-    try:
-        user_path = app.config["AUTO_HOME"] + "/users/%s/config.json" % session["username"]
+        report_url = url_for("routes.q_view_report",
+                             _external=True,
+                             username=username,
+                             project=name,
+                             task=task_no)
+        msg = MIMEText("""Hello, %s<hr>
+                    项目名称：%s<hr>
+                    构建编号: %s<hr>
+                    构建状态: %s<hr>
+                    持续时间: %s毫秒<hr>
+                    详细报告: <a href='%s'>%s</a><hr>
+                    构建日志: <br>%s<hr><br><br>
+                    (本邮件是程序自动下发的，请勿回复！)""" %
+                       (username,
+                        result.statistics.suite.stat.name,
+                        task_no,
+                        build_msg,
+                        result.suite.elapsedtime,
+                        report_url, report_url,
+                        codecs.open(output + "/debug.txt", "r", "utf-8").read().replace("\n", "<br>")
+                        ),
+                       "html", "utf-8")
+
+        msg["Subject"] = Header("AutoLink通知消息", "utf-8")
+
+        # try:
+        user_path = Config.AUTO_HOME + "/users/%s/config.json" % username
+        app.logger.debug(user_path)
         user_conf = json.load(codecs.open(user_path, 'r', 'utf-8'))
         for p in user_conf["data"]:
             if p["name"] == name:
@@ -186,20 +216,85 @@ def send_robot_report(username, name, task_no, result, output):
         config = json.load(codecs.open(conf_path, 'r', 'utf-8'))
         msg["From"] = config["smtp"]["username"]
         if config["smtp"]["ssl"]:
-            smtp = smtplib.SMTP_SSL()
+            smtpobj =smtplib.SMTP_SSL(host=config["smtp"]["server"]).connect(host=config["smtp"]["server"], port=config["smtp"]["port"])
         else:
-            smtp = smtp.SMTP()
+            smtpobj = smtplib.SMTP(host=config["smtp"]["server"])
 
         # 连接至服务器
-        smtp.connect(config["smtp"]["server"], int(config["smtp"]["port"]))
+        app.logger.debug(config)
+        app.logger.debug(config["smtp"]["server"])
+
+        smtpobj.connect(host=config["smtp"]["server"], port=config["smtp"]["port"])
         # 登录
-        smtp.login(config["smtp"]["username"], config["smtp"]["password"])
+        smtpobj.login(config["smtp"]["username"], config["smtp"]["password"])
         # 发送邮件
-        smtp.sendmail(msg["From"], msg["To"].split(","), msg.as_string().encode("utf8"))
+        smtpobj.sendmail(msg["From"], msg["To"].split(","), msg.as_string().encode("utf8"))
         # 断开连接
-        smtp.quit()
-    except Exception as e:
-        print("邮件发送错误: %s" % e)
+        smtpobj.quit()
+        # except Exception as e:
+        #     print("邮件发送错误: %s" % e)
+        print(current_app.name)
+
+    # with staticVar.initapp.app_context():
+    #     app = current_app._get_current_object()
+    #     build_msg = "<font color='green'>Success</font>"
+    #     if result.statistics.total.critical.failed != 0:
+    #         build_msg = "<font color='red'>Failure</font>"
+    #
+    #     report_url = url_for("routes.q_view_report",
+    #                          _external=True,
+    #                          username=username,
+    #                          project=name,
+    #                          task=task_no)
+    #     msg = MIMEText("""Hello, %s<hr>
+    #                 项目名称：%s<hr>
+    #                 构建编号: %s<hr>
+    #                 构建状态: %s<hr>
+    #                 持续时间: %s毫秒<hr>
+    #                 详细报告: <a href='%s'>%s</a><hr>
+    #                 构建日志: <br>%s<hr><br><br>
+    #                 (本邮件是程序自动下发的，请勿回复！)""" %
+    #                    (username,
+    #                     result.statistics.suite.stat.name,
+    #                     task_no,
+    #                     build_msg,
+    #                     result.suite.elapsedtime,
+    #                     report_url, report_url,
+    #                     codecs.open(output + "/debug.txt", "r", "utf-8").read().replace("\n", "<br>")
+    #                     ),
+    #                    "html", "utf-8")
+    #
+    #     msg["Subject"] = Header("AutoLink通知消息", "utf-8")
+    #
+    #     try:
+    #         user_path = app.config["AUTO_HOME"] + "/users/%s/config.json" % username
+    #         user_conf = json.load(codecs.open(user_path, 'r', 'utf-8'))
+    #         for p in user_conf["data"]:
+    #             if p["name"] == name:
+    #                 if result.statistics.total.critical.failed != 0:
+    #                     msg["To"] = p["fail_list"]
+    #                 else:
+    #                     msg["To"] = p["success_list"]
+    #                 break
+    #
+    #         conf_path = app.config["AUTO_HOME"] + "/auto.json"
+    #         config = json.load(codecs.open(conf_path, 'r', 'utf-8'))
+    #         msg["From"] = config["smtp"]["username"]
+    #         if config["smtp"]["ssl"]:
+    #             smtp = smtplib.SMTP_SSL()
+    #         else:
+    #             smtp = smtplib.SMTP()
+    #
+    #         # 连接至服务器
+    #         smtp.connect(config["smtp"]["server"], int(config["smtp"]["port"]))
+    #         # 登录
+    #         smtp.login(config["smtp"]["username"], config["smtp"]["password"])
+    #         # 发送邮件
+    #         smtp.sendmail(msg["From"], msg["To"].split(","), msg.as_string().encode("utf8"))
+    #         # 断开连接
+    #         smtp.quit()
+    #     except Exception as e:
+    #         print("邮件发送错误: %s" % e)
 
 
 class RobotRun(threading.Thread):
