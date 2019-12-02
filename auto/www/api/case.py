@@ -152,7 +152,7 @@ class ManageFile(Resource):
     def __upload(self, file, path):
         result = {"status": "success", "msg": "上传成功"}
 
-        user_path = self.app.config["AUTO_HOME"] + "/workspace/%s" % session['username'] + path + file.filename
+        user_path = self.app.config["AUTO_HOME"] + path + file.filename
         if not exists_path(user_path):
             file.save(user_path)
         else:

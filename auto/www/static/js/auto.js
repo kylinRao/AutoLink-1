@@ -160,11 +160,10 @@ function onDblClick(node) {
     if(category == "case"){
         var suite = $('#project_tree').tree('getParent', node.target);
         var project = $('#project_tree').tree('getParent', suite.target);
-        addTab(node.attributes['name'], '/editor/{0}/{1}/{2}{3}'.lym_format(
-            project.attributes['name'],
-            suite.attributes['name'],
-            node.attributes['name'],
-            node.attributes['splitext']
+        addTab(node.attributes['name'], '/editor?path={0}/{1}'.lym_format(
+
+            node.attributes['current_path'],
+            node.attributes['name']
             ), "icon-editor");
     }
     else if(do_in_array(category, steps)){
@@ -506,7 +505,7 @@ function do_upload(win_id, ff_id){
     var node = $('#project_tree').tree('getSelected');
     if(node){
         var project = $('#project_tree').tree('getParent', node.target);
-        $("#{0} input#path".lym_format(ff_id)).val("/{0}/{1}/".lym_format(project.attributes['name'], node.attributes['name']));
+        $("#{0} input#path".lym_format(ff_id)).val("/{1}/{0}/".lym_format(node.attributes['name'], node.attributes['current_path']));
         $("#{0}".lym_format(ff_id)).form('submit', {
             success: function (result) {
                 //var node = $('#project_tree').tree('getSelected');

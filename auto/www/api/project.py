@@ -321,17 +321,20 @@ def get_suite_by_project(app, username, args):
                 "current_path": self_path
             })
         elif file_case_or_suit(fulle_path) == "normal_file":
+            text = get_splitext(file_or_dir_name)
+            if text[1] in ICONS:
+                icons = ICONS[text[1]]
             icons = "icon-file-default"
             children.append({
                 "text": file_or_dir_name, "iconCls": icons, "state": "closed",
                 "attributes": {
-                    "name": text[0], "category": "case", "splitext": text[1], "current_path": self_path,"project_name":args["name"],
+                    "name": file_or_dir_name, "category": "case", "splitext": text[1], "current_path": self_path,"project_name":args["name"],
                 },
                 "children": [],
                 "current_path": self_path
             })
         else:
-            text = get_splitext(fulle_path)
+            text = get_splitext(file_or_dir_name)
             if text[1] in ICONS:
                 icons = ICONS[text[1]]
             # 这是一个robot结尾的用例文件

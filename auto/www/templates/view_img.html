@@ -19,7 +19,8 @@
 
 
         <div data-options="region:'center'">
-           <img src="/view_img?path=/{{ project }}/{{ suite }}/{{ case }}">
+           <!--<img src="/view_img?path=/{{ project }}/{{ suite }}/{{ case }}">-->
+            <img src="/view_img?path=/{{ current_path }}">
         </div>
         <script src="{{ url_for('static', filename='lib/easyui/jquery.min.js') }}"></script>
         <script src="{{ url_for('static', filename='lib/easyui/jquery.easyui.min.js') }}"></script>
