@@ -74,13 +74,15 @@ def robot_run(username, name, project, output):
     ResultWriter(detail_result).write_results(report=out + '/report.html', log=out + '/log.html')
 
     send_robot_report(username, name, index, detail_result, out)
-def robot_run_cli(username, name,test_case_name, case_file_path, output):
+def robot_run_cli(username, project,test_case_name, case_file_path, output):
     if not exists_path(output):
         mk_dirs(output)
     (out, index) = reset_next_build_numb(output)
-
-
+    import os
+    retval = os.getcwd()
+    os.chdir(os.path.join(Config.AUTO_WORKSPACE,username,project))
     robot.run_cli(['--test',test_case_name,'--outputdir',out,case_file_path])
+    os.chdir(os.getcwd())
 
 
     # detail_result = ExecutionResult(out + "/output.xml")

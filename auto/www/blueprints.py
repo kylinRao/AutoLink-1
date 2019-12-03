@@ -43,9 +43,22 @@ def tree_demo():
     return render_template('tree_data1.json')
 
 
-@routes.route("/editor/<project>/<suite>/<case>")
-def editor(project, suite, case):
-    t = get_splitext(case)
+# @routes.route("/editor/<project>/<suite>/<case>")
+# def editor(project, suite, case):
+#     current_app._get_current_object().logger.debug("editor route!!")
+#     t = get_splitext(case)
+#
+#     default = "default.html"
+#     if t[1] in (".txt", ".robot", ".py", ".js"):
+#         default = "editor.html"
+#     elif t[1] in (".bmp", ".jpg", ".jpeg", ".png", ".gif"):
+#         default = "view_img.html"
+#
+#     return render_template(default, project=project, suite=suite, case=case)
+@routes.route("/editor/", methods=['post','get'])
+def editor():
+    path = request.args.get('path').lstrip('/workspace')
+    t = get_splitext(path)
 
     default = "default.html"
     if t[1] in (".txt", ".robot", ".py", ".js"):
@@ -53,8 +66,7 @@ def editor(project, suite, case):
     elif t[1] in (".bmp", ".jpg", ".jpeg", ".png", ".gif"):
         default = "view_img.html"
 
-    return render_template(default, project=project, suite=suite, case=case)
-
+    return render_template(default, path=path)
 
 @routes.route("/task_list/<name>")
 def task_list(name):

@@ -341,7 +341,7 @@ def get_suite_by_project(app, username, args):
             children.append({
                 "text": file_or_dir_name, "iconCls": icons, "state": "closed",
                 "attributes": {
-                    "name": text[0], "category": "case", "splitext": text[1], "current_path": self_path,"project_name":args["name"],
+                    "name": file_or_dir_name, "category": "case", "splitext": text[1], "current_path": self_path,"project_name":args["name"],
                 },
                 "children": [],
                 "current_path": self_path
@@ -394,7 +394,7 @@ def get_case_by_suite(app, username, args):
             children.append({
                 "text": file_or_dir_name, "iconCls": icons, "state": "closed",
                 "attributes": {
-                    "name": text[0], "category": "case", "splitext": text[1], "current_path": parent_path,'project_name':args['project'],
+                    "name": file_or_dir_name, "category": "case", "splitext": text[1], "current_path": parent_path,'project_name':args['project'],
                 },
                 "children": [],
                 "current_path": parent_path
@@ -434,9 +434,9 @@ def get_case_by_suite(app, username, args):
 def get_step_by_case(app, username, args):
 
     app.logger.info(args)
-    case_full_path =os.path.join(app.config["AUTO_HOME"] ,args['current_path'],args['name']+args["splitext"])
-    case_relative_path_to_app_home = os.path.join(args['current_path'],args['name']+args["splitext"])
-    re_path = os.path.join("workspace", username, args["project"], args["suite"], args["name"], args["splitext"])
+    case_full_path =os.path.join(app.config["AUTO_HOME"] ,args['current_path'],args['name'])
+    case_relative_path_to_app_home = os.path.join(args['current_path'],args['name'])
+    re_path = os.path.join(args['current_path'],args['name'])
     data = []
     if args["splitext"] == ".robot":
         data = get_case_data(case_full_path,case_relative_path_to_app_home,args=args)

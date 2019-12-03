@@ -117,8 +117,8 @@ function do_run(){
             var project = $('#project_tree').tree('getParent', suite.target);
             data["project"] = project.attributes["name"];
             data["suite"] = suite.attributes["name"];
-            data["current_path"] = suite.attributes["current_path"];
-            data["case"] = node.attributes["name"] + node.attributes['splitext'];
+            data["current_path"] = node.attributes["current_path"];
+            data["case"] = node.attributes["name"] ;
         }
         else if(category == "step"){
             var suite = $('#project_tree').tree('getParent', node.target);
@@ -170,14 +170,13 @@ function onDblClick(node) {
         var testcase = $('#project_tree').tree('getParent', node.target);
         var suite = $('#project_tree').tree('getParent', testcase.target);
         var project = $('#project_tree').tree('getParent', suite.target);
-        addTab(testcase.attributes['name'], '/editor/{0}/{1}/{2}{3}'.lym_format(
-            project.attributes['name'],
-            suite.attributes['name'],
-            testcase.attributes['name'],
-            testcase.attributes['splitext']
+        addTab(testcase.attributes['name'], '/editor?path={0}/{1}'.lym_format(
+            node.attributes['current_path'],
+            node.attributes['name']
+
             ), "icon-editor");
     }
-    else if(category == "keyword"){
+        else if(category == "keyword"){
         var step = $('#project_tree').tree('getParent', node.target);
         var testcase = $('#project_tree').tree('getParent', step.target);
         var suite = $('#project_tree').tree('getParent', testcase.target);
@@ -189,6 +188,18 @@ function onDblClick(node) {
             testcase.attributes['splitext']
             ), "icon-editor");
     }
+    // else if(category == "keyword"){
+    //     var step = $('#project_tree').tree('getParent', node.target);
+    //     var testcase = $('#project_tree').tree('getParent', step.target);
+    //     var suite = $('#project_tree').tree('getParent', testcase.target);
+    //     var project = $('#project_tree').tree('getParent', suite.target);
+    //     addTab(testcase.attributes['name'], '/editor/{0}/{1}/{2}{3}'.lym_format(
+    //         project.attributes['name'],
+    //         suite.attributes['name'],
+    //         testcase.attributes['name'],
+    //         testcase.attributes['splitext']
+    //         ), "icon-editor");
+    // }
 }
 
 function onContextMenu(e, node){

@@ -42,8 +42,10 @@ class Case(Resource):
         ext = get_splitext(args["path"])
         result["ext"] = ext[1]
 
-        path = self.app.config["AUTO_HOME"] + "/workspace/%s%s" % (session["username"], args["path"])
-        data = read_file(path)
+        # full_path = self.app.config["AUTO_HOME"] + "/workspace/%s%s" % (session["username"], args["path"])
+        full_path = os.path.join(self.app.config["AUTO_HOME"],args['path'])
+
+        data = read_file(full_path)
         if not data["status"]:
             result["status"] = "fail"
             result["msg"] = "读取文件失败"

@@ -65,7 +65,7 @@ class Task(Resource):
                 #     return {"status": "fail", "msg": "请等待上一个任务完成"}
             elif category == "case":
 
-                case_path = project + "/%s/%s" % (args["suite"], args["case"])
+                case_path = os.path.join(self.app.config['AUTO_HOME'],args['current_path'],args['case'])
                 self.app.logger.debug(case_path)
                 # if not is_run(self.app, args["project"]):
                 p = multiprocessing.Process(target=robot_run,
@@ -89,7 +89,7 @@ class Task(Resource):
                 p.start()
                 self.app.config["AUTO_ROBOT"].append(
                     {"name": "%s" % args["project"], "process": p})
-            return {"status": "success", "msg": "已启动运行,{content}".format(content="<a href=\"#\" onclick=\"parent.addTab('HTTP接口测试项目_demo', '/task_list/HTTP接口测试项目_demo', 'icon-task');\">查看</a>")}
+            return {"status": "success", "msg": "已启动运行,{content}".format(content="<a href=\"#\" onclick=\"parent.addTab('{project}', '/task_list/{project}', 'icon-task');\">查看</a>".format(project=args["project"]))}
         elif args["method"] == "stop":
             stop_robot(self.app, args["project"])
             return {"status": "success", "msg": "已停止运行"}
