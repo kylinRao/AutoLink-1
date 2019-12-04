@@ -352,7 +352,7 @@ def get_suite_by_project(app, username, args):
 def get_case_by_suite(app, username, args):
     app.logger.debug(args)
     current_path = os.path.join(app.config["AUTO_HOME"] ,args['current_path'],args['name'])
-    parent_path = os.path.join("workspace", username, args["project"], args["name"] )
+    parent_path = os.path.join( args["current_path"], args["name"] )
 
     list_dirs = list_dir(current_path)
     children = []

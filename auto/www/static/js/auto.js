@@ -110,13 +110,14 @@ function do_run(){
         }
         else if(category == "suite"){
             var project = $('#project_tree').tree('getParent', node.target);
-            data["project"] = project.attributes["name"];
+            data["current_path"] = node.attributes["current_path"];
+            data["project"] = project.attributes["project_name"];
             data["suite"] = node.attributes["name"];
         }
         else if(category == "case"){
             var suite = $('#project_tree').tree('getParent', node.target);
             var project = $('#project_tree').tree('getParent', suite.target);
-            data["project"] = project.attributes["name"];
+            data["project"] = project.attributes["project_name"];
             data["suite"] = suite.attributes["name"];
             data["current_path"] = node.attributes["current_path"];
             data["case"] = node.attributes["name"] ;

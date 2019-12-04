@@ -83,6 +83,10 @@ def robot_run_cli(username, project,test_case_name, case_file_path, output):
     os.chdir(os.path.join(Config.AUTO_WORKSPACE,username,project))
     robot.run_cli(['--test',test_case_name,'--outputdir',out,case_file_path])
     os.chdir(os.getcwd())
+    detail_result = ExecutionResult(out + "/output.xml")
+
+    # detail_result.save(out + "/output_new.xml")
+    reset_last_status(detail_result, output, index)
 
 
     # detail_result = ExecutionResult(out + "/output.xml")

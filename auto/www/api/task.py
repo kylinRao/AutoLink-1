@@ -58,7 +58,7 @@ class Task(Resource):
                 # else:
                 #     return {"status": "fail", "msg": "请等待上一个任务完成"}
             elif category == "suite":
-                case_path = project + "/%s" % args["suite"]
+                case_path = os.path.join(self.app.config['AUTO_HOME'],args['current_path'],args['suite'])
                 # if not is_run(self.app, args["project"]):
                 p = multiprocessing.Process(target=robot_run, args=(session["username"], args["project"], case_path, output))
                 p.start()
