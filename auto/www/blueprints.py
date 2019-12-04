@@ -57,8 +57,11 @@ def tree_demo():
 #     return render_template(default, project=project, suite=suite, case=case)
 @routes.route("/editor/", methods=['post','get'])
 def editor():
-    path = request.args.get('path').lstrip('/workspace')
+    app = current_app._get_current_object()
+    path = request.args.get('path').replace('workspace','')
     t = get_splitext(path)
+    app.logger.debug(path)
+
 
     default = "default.html"
     if t[1] in (".txt", ".robot", ".py", ".js"):

@@ -66,6 +66,8 @@
                 }
                 // var path = "/{{ project }}/{{ suite }}/{{ case }}";
                 var path = "/{{ path }}";
+                console.log("path:")
+                console.log(path)
                 editor = CodeMirror.fromTextArea(document.getElementById("code_editor"), {
                     mode: 'robot',
                     lineNumbers: true,
