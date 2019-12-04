@@ -58,10 +58,10 @@ def tree_demo():
 @routes.route("/editor/", methods=['post','get'])
 def editor():
     app = current_app._get_current_object()
-    path = request.args.get('path').replace('workspace','')
+    path = request.args.get('path')
     t = get_splitext(path)
     app.logger.debug(path)
-
+    from urllib import parse
 
     default = "default.html"
     if t[1] in (".txt", ".robot", ".py", ".js"):
@@ -69,7 +69,7 @@ def editor():
     elif t[1] in (".bmp", ".jpg", ".jpeg", ".png", ".gif"):
         default = "view_img.html"
 
-    return render_template(default, path=path)
+    return render_template(default, path=parse.quote(path))
 
 @routes.route("/task_list/<name>")
 def task_list(name):

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from datetime import datetime
+
 import robot
 
 __author__ = "苦叶子"
@@ -180,6 +182,7 @@ class TaskList(Resource):
 
 
 def get_task_list(app, username, project):
+    app.logger.debug("開始時間：{time}".format(time=datetime.now()))
     job_path = app.config["AUTO_HOME"] + "/jobs/%s/%s" % (username, project)
     next_build = 0
     task = []
@@ -216,7 +219,10 @@ def get_task_list(app, username, project):
             last = 1
             if running:
                 last = 2
-            for i in range(next_build-last, -1, -1):
+            end = -1
+            if next_build > app.config["RESULTS_LIMIT"]:
+                end = next_build-last-app.config["RESULTS_LIMIT"]
+            for i in range(next_build-last, end, -1):
                 if exists_path(job_path + "/%s" % i):
                     try:
                         suite = ExecutionResult(job_path + "/%s/output.xml" % i).suite
@@ -251,6 +257,8 @@ def get_task_list(app, username, project):
                             "elapsedtime": "-",
                             "note": "异常"
                         })
+
+    app.logger.debug("結束時間：{time}".format(time=datetime.now()))
 
     return {"total": next_build-1, "rows": task}
 

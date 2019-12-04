@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from auto.configuration import config, Config
 
 __author__ = "苦叶子"
 
@@ -38,12 +39,21 @@ class Case(Resource):
         args = self.parser.parse_args()
         self.app.logger.debug(args)
         result = {"status": "success", "msg": "读取文件成功"}
-
-        ext = get_splitext(args["path"])
+        from urllib import parse
+        path = parse.unquote(args['path'])
+        self.app.logger.debug(args['path'])
+        self.app.logger.debug(path)
+        ext = get_splitext(path)
         result["ext"] = ext[1]
 
         # full_path = self.app.config["AUTO_HOME"] + "/workspace/%s%s" % (session["username"], args["path"])
-        full_path = os.path.join(self.app.config["AUTO_HOME"],args['path'])
+
+        full_path = os.path.join(self.app.config["AUTO_HOME"],path)
+        self.app.logger.debug(self.app.config["AUTO_HOME"])
+        self.app.logger.debug("完整路径：")
+        self.app.logger.debug(self.app.config["AUTO_HOME"])
+        self.app.logger.debug(path)
+        self.app.logger.debug(full_path)
 
         data = read_file(full_path)
         if not data["status"]:

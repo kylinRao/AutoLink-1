@@ -37,6 +37,7 @@ class Config:
     SSL_REDIRECT = False
 
     SECRET_KEY = 'QWERTYUIOPASDFGHJ'
+    RESULTS_LIMIT = 20
     # logging level
     LOGGING_LEVEL = logging.INFO
     AUTO_HOME = os.getcwd().replace('\\', '/') + '/.beats'

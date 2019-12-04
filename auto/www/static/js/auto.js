@@ -82,6 +82,7 @@ function do_init(data){
 }
 
 function do_ajax(type, url, data, func){
+    console.log(data);
     $.ajax({
         type : type,
         url : url,
