@@ -29,6 +29,7 @@ class Case(Resource):
         self.parser.add_argument('project_name', type=str)
         self.parser.add_argument('suite_name', type=str)
         self.parser.add_argument('category', type=str)
+        self.parser.add_argument('current_path', type=str)
         self.parser.add_argument('new_category', type=str)
         self.parser.add_argument('path', type=str)
         self.parser.add_argument('data', type=str)
@@ -118,11 +119,12 @@ class Case(Resource):
 
     def __delete(self, args):
         result = {"status": "success", "msg": "目录删除成功"}
-        user_path = self.app.config["AUTO_HOME"] + "/workspace/%s/%s/%s/%s%s" % (session["username"],
-                                                                                 args["project_name"],
-                                                                                 args["suite_name"],
-                                                                                 args["name"],
-                                                                                 args["category"])
+        # user_path = self.app.config["AUTO_HOME"] + "/workspace/%s/%s/%s/%s%s" % (session["username"],
+        #                                                                          args["project_name"],
+        #                                                                          args["suite_name"],
+        #                                                                          args["name"],
+        #                                                                          args["category"])
+        user_path=os.path.join(self.app.config['AUTO_HOME'],args["current_path"],args["name"])
         if exists_path(user_path):
             remove_file(user_path)
 
@@ -134,8 +136,11 @@ class Case(Resource):
 
     def __save(self, args):
         result = {"status": "success", "msg": "保存成功"}
+        from urllib import parse
 
-        user_path = self.app.config["AUTO_HOME"] + "/workspace/%s%s" % (session["username"], args["path"])
+
+        user_path = os.path.join(self.app.config["AUTO_HOME"]  , parse.unquote(args['path']))
+        self.app.logger.debug(user_path)
 
         if not write_file(user_path, args["data"]):
             result["status"] = "fail"

@@ -505,6 +505,7 @@ function delete_file(){
                             "suite_name": suite.attributes['name'],
                             "project_name": project.attributes['name'],
                             "category": node.attributes['splitext'],
+                            "current_path": node.attributes['current_path'],
                             "method": "delete"
                         };
 

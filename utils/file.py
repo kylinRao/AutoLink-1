@@ -84,6 +84,7 @@ def make_nod(path, mode="w", encoding="utf-8"):
 
 
 def write_file(path, data, mode="w", encoding="utf-8"):
+
     if not exists_path(path):
         return False
 
