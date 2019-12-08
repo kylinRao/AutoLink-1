@@ -214,24 +214,20 @@ def send_robot_report(username, name, task_no, result, output):
                         # codecs.open(output + "/debug.txt", "r", "utf-8").read().replace("\n", "<br>")
                         ),
                        "html", "utf-8"))
-
-
-        # with codecs.open(os.path.join(output, "report.html"),'r','utf-8') as f:
         #
-        #     pdfkit.from_string(f.read(), os.path.join(output, "report.pdf"))
-        try:
-            with codecs.open(os.path.join(output, "report.html"), 'r', 'utf-8') as f:
-                # pdfkit.from_file(os.path.join(output, "report.html"), os.path.join(output, "report.pdf"))
-                pdfkit.from_url(report_url, os.path.join(output, "report.pdf"))
-        except:
-            subprocess.run("wkhtmltopdf {input} {output}".format(input=os.path.join(output, "report.html"),output=os.path.join(output, "report.pdf")))
-
-        system = platform.system()
-        encode = 'gbk' if system is 'Windows' else 'utf-8'
-        pdf_att = MIMEText(open(output + "/report.pdf", 'rb').read(), 'base64', encode)
-        pdf_att["Content-Type"] = 'application/octet-stream'
-        pdf_att["Content-Disposition"] = 'attachment; filename="report.pdf"'
-        msg.attach(pdf_att)
+        # try:
+        #     with codecs.open(os.path.join(output, "report.html"), 'r', 'utf-8') as f:
+        #
+        #         pdfkit.from_url(report_url, os.path.join(output, "report.pdf"))
+        # except:
+        #     subprocess.run("wkhtmltopdf {input} {output}".format(input=os.path.join(output, "report.html"),output=os.path.join(output, "report.pdf")))
+        #
+        # system = platform.system()
+        # encode = 'gbk' if system is 'Windows' else 'utf-8'
+        # pdf_att = MIMEText(open(output + "/report.pdf", 'rb').read(), 'base64', encode)
+        # pdf_att["Content-Type"] = 'application/octet-stream'
+        # pdf_att["Content-Disposition"] = 'attachment; filename="report.pdf"'
+        # msg.attach(pdf_att)
 
 
         debug_att = MIMEText(open(output + "/debug.txt", 'rb').read(), 'base64', 'utf-8')
