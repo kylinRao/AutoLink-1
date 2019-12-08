@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
+import platform
+from email.mime.multipart import MIMEMultipart
+
 import robot
 from flask_script import Manager
 from flask import current_app
+import pdfkit
 
 from auto.configuration import Config
 from auto.www.init_app import create_app, get_app
@@ -186,23 +190,49 @@ def send_robot_report(username, name, task_no, result, output):
                              username=username,
                              project=name,
                              task=task_no)
-        msg = MIMEText("""Hello, %s<hr>
+        msg = MIMEMultipart()
+
+        # 邮件正文内容
+        msg.attach(MIMEText("""
                     项目名称：%s<hr>
                     构建编号: %s<hr>
                     构建状态: %s<hr>
+                    通过用例: %s<hr>
+                    失败用例: <font color='red'>%s</font><hr>
                     持续时间: %s毫秒<hr>
                     详细报告: <a href='%s'>%s</a><hr>
-                    构建日志: <br>%s<hr><br><br>
                     (本邮件是程序自动下发的，请勿回复！)""" %
-                       (username,
-                        result.statistics.suite.stat.name,
+                       (result.statistics.suite.stat.name,
                         task_no,
                         build_msg,
+                        result.statistics.total.critical.passed,
+                        result.statistics.total.critical.failed,
                         result.suite.elapsedtime,
                         report_url, report_url,
-                        codecs.open(output + "/debug.txt", "r", "utf-8").read().replace("\n", "<br>")
+                        # codecs.open(output + "/debug.txt", "r", "utf-8").read().replace("\n", "<br>")
                         ),
-                       "html", "utf-8")
+                       "html", "utf-8"))
+
+        pdfkit.from_file(output + "/report.html", output + "/report.pdf", )
+
+        system = platform.system()
+        encode = 'gbk' if system is 'Windows' else 'utf-8'
+        pdf_att = MIMEText(open(output + "/report.pdf", 'rb').read(), 'base64', encode)
+        pdf_att["Content-Type"] = 'application/octet-stream'
+        pdf_att["Content-Disposition"] = 'attachment; filename="report.pdf"'
+        msg.attach(pdf_att)
+
+
+        debug_att = MIMEText(open(output + "/debug.txt", 'rb').read(), 'base64', 'utf-8')
+        debug_att["Content-Type"] = 'application/octet-stream'
+        debug_att["Content-Disposition"] = 'attachment; filename="debug.txt"'
+        msg.attach(debug_att)
+
+        html_att = MIMEText(open(output + "/report.html", 'rb').read(), 'base64', 'utf-8')
+        html_att["Content-Type"] = 'application/octet-stream'
+        html_att["Content-Disposition"] = 'attachment; filename="report_test.html"'
+        msg.attach(html_att)
+
 
         msg["Subject"] = Header("AutoLink通知消息", "utf-8")
 
@@ -221,20 +251,23 @@ def send_robot_report(username, name, task_no, result, output):
         conf_path = app.config["AUTO_HOME"] + "/auto.json"
         config = json.load(codecs.open(conf_path, 'r', 'utf-8'))
         msg["From"] = config["smtp"]["username"]
+        app.logger.debug(config)
+        app.logger.debug(config["smtp"]["server"])
         if config["smtp"]["ssl"]:
             smtpobj =smtplib.SMTP_SSL(host=config["smtp"]["server"]).connect(host=config["smtp"]["server"], port=config["smtp"]["port"])
         else:
             smtpobj = smtplib.SMTP(host=config["smtp"]["server"])
 
         # 连接至服务器
-        app.logger.debug(config)
-        app.logger.debug(config["smtp"]["server"])
+
+
 
         smtpobj.connect(host=config["smtp"]["server"], port=config["smtp"]["port"])
         # 登录
         smtpobj.login(config["smtp"]["username"], config["smtp"]["password"])
         # 发送邮件
         smtpobj.sendmail(msg["From"], msg["To"].split(","), msg.as_string().encode("utf8"))
+        # smtpobj.sendmail(msg["From"], msg["To"].split(","), msg.as_string())
         # 断开连接
         smtpobj.quit()
         # except Exception as e:

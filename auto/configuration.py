@@ -42,6 +42,7 @@ class Config:
     LOGGING_LEVEL = logging.INFO
     AUTO_HOME = os.getcwd().replace('\\', '/') + '/.beats'
     AUTO_WORKSPACE = os.path.join(AUTO_HOME,'workspace')
+    SERVER_NAME="10.0.54.55000"
 
     AUTO_ROBOT = []
 
