@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import platform
 from email.mime.multipart import MIMEMultipart
 
@@ -213,7 +214,7 @@ def send_robot_report(username, name, task_no, result, output):
                         ),
                        "html", "utf-8"))
 
-        pdfkit.from_file(output + "/report.html", output + "/report.pdf", )
+        pdfkit.from_file(os.path.join(output , "report.html"), os.path.join(output , "report.pdf") )
 
         system = platform.system()
         encode = 'gbk' if system is 'Windows' else 'utf-8'
