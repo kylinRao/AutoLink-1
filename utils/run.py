@@ -222,7 +222,7 @@ def send_robot_report(username, name, task_no, result, output):
         try:
             with codecs.open(os.path.join(output, "report.html"), 'r', 'utf-8') as f:
                 # pdfkit.from_file(os.path.join(output, "report.html"), os.path.join(output, "report.pdf"))
-                pdfkit.from_file(f, os.path.join(output, "report.pdf"))
+                pdfkit.from_url(report_url, os.path.join(output, "report.pdf"))
         except:
             subprocess.run("wkhtmltopdf {input} {output}".format(input=os.path.join(output, "report.html"),output=os.path.join(output, "report.pdf")))
 
