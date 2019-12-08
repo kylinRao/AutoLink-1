@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import platform
+import subprocess
 from email.mime.multipart import MIMEMultipart
 
 import robot
@@ -218,9 +219,12 @@ def send_robot_report(username, name, task_no, result, output):
         # with codecs.open(os.path.join(output, "report.html"),'r','utf-8') as f:
         #
         #     pdfkit.from_string(f.read(), os.path.join(output, "report.pdf"))
-        with codecs.open(os.path.join(output, "report.html"), 'r', 'utf-8') as f:
-            # pdfkit.from_file(os.path.join(output, "report.html"), os.path.join(output, "report.pdf"))
-            pdfkit.from_file(f, os.path.join(output, "report.pdf"))
+        try:
+            with codecs.open(os.path.join(output, "report.html"), 'r', 'utf-8') as f:
+                # pdfkit.from_file(os.path.join(output, "report.html"), os.path.join(output, "report.pdf"))
+                pdfkit.from_file(f, os.path.join(output, "report.pdf"))
+        except:
+            subprocess.run("wkhtmltopdf {input} {output}".format(input=os.path.join(output, "report.html"),output=os.path.join(output, "report.pdf")))
 
         system = platform.system()
         encode = 'gbk' if system is 'Windows' else 'utf-8'
