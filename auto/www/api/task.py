@@ -99,6 +99,28 @@ class Task(Resource):
             delete_task_record(self.app, args["project"], args["task_no"])
             return {"status": "success", "msg": "已经删除记录"}
 
+class RunTask(Resource):
+    def __init__(self):
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument('project', type=str)
+        self.parser.add_argument('username', type=str)
+        self.app = current_app._get_current_object()
+
+    def get(self,project,username):
+        ###############无需鉴权即可调用自动化用例的接口http://ip：port/api/v1/run_task/project名称/工程所属用户名称
+        args = self.parser.parse_args()
+        # project = args["project"]
+        # username=args["username"]
+        # self.app.logger.debug("RunTask input project and username")
+        self.app.logger.debug(project)
+        self.app.logger.debug(username)
+        project_path = self.app.config["AUTO_HOME"] + "/workspace/%s/%s" % (username , project)
+        output = self.app.config["AUTO_HOME"] + "/jobs/%s/%s" % (username , project)
+        p = multiprocessing.Process(target=robot_run, args=(username, project, project_path, output))
+        p.start()
+
+
+        return {"code": 200, "msg": "任务已在后台执行，请等待执行完成的邮件报告"}
 
 class TaskList(Resource):
     def __init__(self):

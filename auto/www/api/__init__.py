@@ -35,9 +35,10 @@ api.add_resource(ManageFile, "/manage_file/")
 from .keyword import Keyword
 api.add_resource(Keyword, "/keyword/")
 
-from .task import Task, TaskList
+from .task import Task, TaskList,RunTask
 api.add_resource(Task, "/task/")
 api.add_resource(TaskList, "/task_list/")
+api.add_resource(RunTask, "/run_task/<project>/<username>/")
 
 
 from .user import User
