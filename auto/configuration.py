@@ -37,12 +37,12 @@ class Config:
     SSL_REDIRECT = False
 
     SECRET_KEY = 'QWERTYUIOPASDFGHJ'
-    RESULTS_LIMIT = 20
+    RESULTS_LIMIT = 10
     # logging level
     LOGGING_LEVEL = logging.INFO
     AUTO_HOME = os.getcwd().replace('\\', '/') + '/.beats'
     AUTO_WORKSPACE = os.path.join(AUTO_HOME,'workspace')
-    SERVER_NAME="127.0.0.1:5000"
+    SERVER_NAME="10.0.54.5:5000"
 
     AUTO_ROBOT = []
 
